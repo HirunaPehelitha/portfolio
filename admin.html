@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin — Portfolio</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="projects-data.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -654,15 +657,16 @@ const TEMPLATE_VISUALS = {
 };
 
 // ─── Init ─────────────────────────────────────────────────────────────────
-function init() {
-  renderProjectList();
+async function init() {
+  await renderProjectList();
   renderTemplateGrid();
 }
 
 // ─── Render project list ──────────────────────────────────────────────────
-function renderProjectList() {
-  const projects = getProjects();
+async function renderProjectList() {
   const list = document.getElementById('projects-list');
+  list.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-muted);font-size:12px">Loading…</div>';
+  const projects = await getProjects();
   document.getElementById('stat-total').textContent = projects.length;
   const cats = new Set(projects.map(p => p.category));
   document.getElementById('stat-cats').textContent = cats.size;
@@ -808,8 +812,9 @@ function openModal() {
   document.getElementById('modal-overlay').classList.add('open');
 }
 
-function openEdit(id) {
-  const p = getProjects().find(x => x.id === id);
+async function openEdit(id) {
+  const projects = await getProjects();
+  const p = projects.find(x => x.id === id);
   if (!p) return;
   editingId = id;
   currentStep = 1;
@@ -862,7 +867,7 @@ function validateStep(step) {
 }
 
 // ─── Save ─────────────────────────────────────────────────────────────────
-function saveProject() {
+async function saveProject() {
   if (!validateStep(1)) { goStep(1); return; }
 
   const tmpl = LAYOUT_TEMPLATES[selectedTemplate];
@@ -884,15 +889,26 @@ function saveProject() {
     images
   };
 
-  if (editingId) {
-    updateProject(editingId, data);
-    showToast('Work updated successfully', 'success');
-  } else {
-    addProject(data);
-    showToast('Work added to portfolio', 'success');
+  const btn = document.getElementById('btn-save');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  try {
+    if (editingId) {
+      await updateProject(editingId, data);
+      showToast('Work updated successfully', 'success');
+    } else {
+      await addProject(data);
+      showToast('Work added to portfolio', 'success');
+    }
+    closeModal();
+    await renderProjectList();
+  } catch(e) {
+    showToast('Error saving. Please try again.', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Save Work ✓';
   }
-  closeModal();
-  renderProjectList();
 }
 
 // ─── Delete ───────────────────────────────────────────────────────────────
@@ -900,11 +916,15 @@ let deleteTarget = null;
 function confirmDelete(id) {
   deleteTarget = id;
   document.getElementById('confirm-overlay').classList.add('open');
-  document.getElementById('confirm-delete-btn').onclick = () => {
-    deleteProject(deleteTarget);
-    closeConfirm();
-    renderProjectList();
-    showToast('Work deleted', 'success');
+  document.getElementById('confirm-delete-btn').onclick = async () => {
+    try {
+      await deleteProject(deleteTarget);
+      closeConfirm();
+      await renderProjectList();
+      showToast('Work deleted', 'success');
+    } catch(e) {
+      showToast('Error deleting. Please try again.', 'error');
+    }
   };
 }
 function closeConfirm() {
@@ -916,11 +936,15 @@ function closeConfirm() {
 function confirmReset() {
   document.getElementById('reset-overlay').classList.add('open');
 }
-function doReset() {
-  resetToDefaults();
-  document.getElementById('reset-overlay').classList.remove('open');
-  renderProjectList();
-  showToast('Reset to default projects', 'success');
+async function doReset() {
+  try {
+    await resetToDefaults();
+    document.getElementById('reset-overlay').classList.remove('open');
+    await renderProjectList();
+    showToast('Reset to default projects', 'success');
+  } catch(e) {
+    showToast('Error resetting. Please try again.', 'error');
+  }
 }
 
 // ─── Toast ────────────────────────────────────────────────────────────────

@@ -1,10 +1,27 @@
 /**
- * Portfolio Projects Data Layer
- * Shared between admin.html and index.html via localStorage
+ * Portfolio Projects Data Layer — Firebase Firestore
+ * Shared between admin.html and index.html
+ * All data is stored in Firestore — changes are live for ALL visitors instantly.
  */
 
-const PORTFOLIO_KEY = 'portfolio_projects';
+// ── Firebase Config ────────────────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyAnrTEcoXZxb-cBhAE7-9i6fK3k0-VBXtw",
+  authDomain: "hiruna-portfolio.firebaseapp.com",
+  projectId: "hiruna-portfolio",
+  storageBucket: "hiruna-portfolio.firebasestorage.app",
+  messagingSenderId: "674402732767",
+  appId: "1:674402732767:web:0ce1c53af586d16fd2f76a"
+};
 
+// ── Initialize Firebase (guard against double-init) ───────────────────────
+if (!window._firebaseApp) {
+  window._firebaseApp = firebase.initializeApp(firebaseConfig);
+}
+const db = firebase.firestore();
+const COLLECTION = 'projects';
+
+// ── Default projects (seeded once if Firestore is empty) ───────────────────
 const DEFAULT_PROJECTS = [
   {
     id: 'proj-01',
@@ -74,60 +91,71 @@ const DEFAULT_PROJECTS = [
   }
 ];
 
-function getProjects() {
+// ── GET all projects (sorted by number) ────────────────────────────────────
+async function getProjects() {
   try {
-    const raw = localStorage.getItem(PORTFOLIO_KEY);
-    if (!raw) {
-      setProjects(DEFAULT_PROJECTS);
+    const snapshot = await db.collection(COLLECTION).orderBy('number').get();
+    if (snapshot.empty) {
+      // First run — seed defaults
+      await seedDefaults();
       return DEFAULT_PROJECTS;
     }
-    return JSON.parse(raw);
+    return snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
   } catch (e) {
-    return DEFAULT_PROJECTS;
+    console.error('Firestore getProjects error:', e);
+    return [];
   }
 }
 
-function setProjects(projects) {
-  localStorage.setItem(PORTFOLIO_KEY, JSON.stringify(projects));
+// ── Seed default projects (only called once when DB is empty) ──────────────
+async function seedDefaults() {
+  const batch = db.batch();
+  DEFAULT_PROJECTS.forEach(p => {
+    const ref = db.collection(COLLECTION).doc(p.id);
+    batch.set(ref, p);
+  });
+  await batch.commit();
 }
 
-function addProject(project) {
-  const projects = getProjects();
+// ── ADD a new project ──────────────────────────────────────────────────────
+async function addProject(project) {
+  const projects = await getProjects();
   project.id = 'proj-' + Date.now();
   project.number = String(projects.length + 1).padStart(2, '0');
-  projects.push(project);
-  setProjects(projects);
+  await db.collection(COLLECTION).doc(project.id).set(project);
   return project;
 }
 
-function updateProject(id, data) {
-  const projects = getProjects();
-  const idx = projects.findIndex(p => p.id === id);
-  if (idx !== -1) {
-    projects[idx] = { ...projects[idx], ...data };
-    setProjects(projects);
-  }
+// ── UPDATE a project ───────────────────────────────────────────────────────
+async function updateProject(id, data) {
+  await db.collection(COLLECTION).doc(id).update(data);
 }
 
-function deleteProject(id) {
-  let projects = getProjects().filter(p => p.id !== id);
-  // Re-number
-  projects = projects.map((p, i) => ({ ...p, number: String(i + 1).padStart(2, '0') }));
-  setProjects(projects);
+// ── DELETE a project and renumber ──────────────────────────────────────────
+async function deleteProject(id) {
+  await db.collection(COLLECTION).doc(id).delete();
+  // Renumber remaining projects
+  const remaining = await getProjects();
+  const batch = db.batch();
+  remaining.forEach((p, i) => {
+    const ref = db.collection(COLLECTION).doc(p.id);
+    batch.update(ref, { number: String(i + 1).padStart(2, '0') });
+  });
+  await batch.commit();
 }
 
-function reorderProjects(ids) {
-  const projects = getProjects();
-  const map = Object.fromEntries(projects.map(p => [p.id, p]));
-  const reordered = ids.map((id, i) => ({ ...map[id], number: String(i + 1).padStart(2, '0') }));
-  setProjects(reordered);
+// ── RESET to defaults ──────────────────────────────────────────────────────
+async function resetToDefaults() {
+  // Delete all existing
+  const snapshot = await db.collection(COLLECTION).get();
+  const batch = db.batch();
+  snapshot.docs.forEach(doc => batch.delete(doc.ref));
+  await batch.commit();
+  // Re-seed
+  await seedDefaults();
 }
 
-function resetToDefaults() {
-  setProjects(DEFAULT_PROJECTS);
-}
-
-// Layout template definitions
+// ── Layout template definitions (unchanged) ───────────────────────────────
 const LAYOUT_TEMPLATES = {
   1: {
     name: 'Poster + Details',
