@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Portfolio</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <script src="projects-data.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0a;
+      --surface: #111111;
+      --card: #181818;
+      --border: #242424;
+      --border-light: #2e2e2e;
+      --accent: #d4ff00;
+      --accent-dim: rgba(212,255,0,0.12);
+      --text: #f0f0f0;
+      --text-muted: #666;
+      --text-dim: #999;
+      --danger: #ff4444;
+      --danger-dim: rgba(255,68,68,0.12);
+      --success: #22c55e;
+      --radius: 6px;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: 220px;
+      min-height: 100vh;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0;
+      z-index: 100;
+    }
+    .sidebar-logo {
+      padding: 24px 20px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-logo span {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .sidebar-logo strong {
+      display: block;
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text);
+      margin-top: 2px;
+    }
+    .sidebar-nav { padding: 16px 12px; flex: 1; }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-bottom: 2px;
+      text-decoration: none;
+    }
+    .nav-item:hover { background: var(--card); color: var(--text); }
+    .nav-item.active { background: var(--accent-dim); color: var(--accent); }
+    .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .sidebar-footer {
+      padding: 16px 12px;
+      border-top: 1px solid var(--border);
+    }
+    .portfolio-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 8px 10px;
+      border-radius: var(--radius);
+      transition: all 0.15s;
+    }
+    .portfolio-link:hover { color: var(--text); background: var(--card); }
+
+    /* ── MAIN ── */
+    .main {
+      margin-left: 220px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      padding: 20px 32px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface);
+      position: sticky; top: 0; z-index: 50;
+    }
+    .topbar-title { font-size: 15px; font-weight: 700; }
+    .topbar-sub { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 9px 16px;
+      border-radius: var(--radius);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+      letter-spacing: 0.02em;
+      font-family: inherit;
+    }
+    .btn-primary { background: var(--accent); color: #000; }
+    .btn-primary:hover { background: #bcdf00; transform: translateY(-1px); }
+    .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+    .btn-ghost:hover { color: var(--text); border-color: var(--border-light); background: var(--card); }
+    .btn-danger { background: var(--danger-dim); color: var(--danger); border: 1px solid rgba(255,68,68,0.25); }
+    .btn-danger:hover { background: rgba(255,68,68,0.2); }
+    .btn svg { width: 14px; height: 14px; }
+
+    /* ── CONTENT ── */
+    .content { padding: 32px; flex: 1; }
+
+    /* ── STATS ── */
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+    .stat-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 8px; }
+    .stat-value { font-size: 28px; font-weight: 900; letter-spacing: -0.03em; }
+    .stat-value.accent { color: var(--accent); }
+
+    /* ── SECTION HEADER ── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .section-title { font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+
+    /* ── PROJECT TABLE ── */
+    .project-table {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .project-row {
+      display: grid;
+      grid-template-columns: 48px 54px 1fr 130px 110px 130px;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.1s;
+    }
+    .project-row:last-child { border-bottom: none; }
+    .project-row:hover { background: rgba(255,255,255,0.025); }
+    .project-row.header-row {
+      background: var(--surface);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      padding: 10px 20px;
+    }
+    .proj-number { font-size: 20px; font-weight: 900; color: var(--text-muted); letter-spacing: -0.05em; }
+    .proj-thumb {
+      width: 54px; height: 38px;
+      border-radius: 3px;
+      overflow: hidden;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+    .proj-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .proj-title { font-size: 13px; font-weight: 700; }
+    .proj-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 320px; }
+    .proj-cat {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 3px 8px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 3px;
+      color: var(--text-dim);
+      white-space: nowrap;
+      width: fit-content;
+    }
+    .layout-badge {
+      font-size: 10px; font-weight: 600;
+      color: var(--text-muted);
+      padding: 3px 8px;
+      background: var(--border);
+      border-radius: 3px;
+    }
+    .row-actions { display: flex; gap: 6px; justify-content: flex-end; }
+    .icon-btn {
+      width: 30px; height: 30px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .icon-btn svg { width: 14px; height: 14px; }
+    .icon-btn-edit { background: rgba(255,255,255,0.05); color: var(--text-muted); }
+    .icon-btn-edit:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+    .icon-btn-del { background: var(--danger-dim); color: var(--danger); }
+    .icon-btn-del:hover { background: rgba(255,68,68,0.2); }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border-light);
+      border-radius: 10px;
+      width: 92%;
+      max-width: 840px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      transform: translateY(16px);
+      transition: transform 0.2s;
+      overflow: hidden;
+    }
+    .modal-overlay.open .modal { transform: translateY(0); }
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .modal-title { font-size: 15px; font-weight: 800; }
+    .modal-close {
+      width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      background: none; border: 1px solid var(--border);
+      border-radius: 5px; cursor: pointer; color: var(--text-muted);
+      font-size: 18px; line-height: 1;
+      transition: all 0.15s; font-family: inherit;
+    }
+    .modal-close:hover { color: var(--text); border-color: var(--border-light); }
+
+    /* Steps */
+    .steps {
+      display: flex;
+      gap: 0;
+      padding: 0 24px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .step-tab {
+      padding: 14px 18px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-bottom: -1px;
+      display: flex; align-items: center; gap: 7px;
+    }
+    .step-tab.active { color: var(--accent); border-color: var(--accent); }
+    .step-num {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--border);
+      color: var(--text-muted);
+      font-size: 9px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .step-tab.active .step-num { background: var(--accent); color: #000; }
+
+    .modal-body { padding: 24px; overflow-y: auto; flex: 1; }
+    .step-panel { display: none; }
+    .step-panel.active { display: block; }
+
+    /* Form */
+    .form-group { margin-bottom: 20px; }
+    .form-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 7px; display: block; }
+    .form-input, .form-textarea, .form-select {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      font-family: inherit;
+      transition: border-color 0.15s;
+      outline: none;
+    }
+    .form-input:focus, .form-textarea:focus, .form-select:focus { border-color: var(--accent); }
+    .form-textarea { min-height: 80px; resize: vertical; line-height: 1.6; }
+    .form-select option { background: var(--card); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-hint { font-size: 11px; color: var(--text-muted); margin-top: 5px; }
+
+    /* Layout templates */
+    .template-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+    .template-card {
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+      background: var(--card);
+    }
+    .template-card:hover { border-color: var(--border-light); }
+    .template-card.selected { border-color: var(--accent); background: var(--accent-dim); }
+    .template-preview { width: 100%; aspect-ratio: 4/3; display: grid; gap: 2px; margin-bottom: 8px; }
+    .t-cell { background: rgba(255,255,255,0.08); border-radius: 2px; }
+    .t-cell.accent { background: rgba(212,255,0,0.25); }
+    .template-name { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); }
+    .template-desc { font-size: 9px; color: var(--text-muted); margin-top: 2px; line-height: 1.4; }
+
+    /* Image slots */
+    .image-slots { display: flex; flex-direction: column; gap: 12px; }
+    .image-slot {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+    }
+    .slot-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .slot-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+    .slot-inputs { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: start; }
+    .slot-preview { width: 48px; height: 36px; border-radius: 3px; overflow: hidden; background: var(--border); flex-shrink: 0; }
+    .slot-preview img { width: 100%; height: 100%; object-fit: cover; display: none; }
+    .slot-or { font-size: 10px; color: var(--text-muted); text-align: center; margin: 6px 0; }
+    .upload-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 12px;
+      background: rgba(255,255,255,0.04);
+      border: 1px dashed var(--border-light);
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 11px; font-weight: 600;
+      color: var(--text-muted); font-family: inherit;
+      transition: all 0.15s; width: 100%;
+    }
+    .upload-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .upload-btn svg { width: 13px; height: 13px; }
+    .slot-bg { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+    .slot-bg-label { font-size: 10px; color: var(--text-muted); font-weight: 600; flex-shrink: 0; }
+    .color-input { width: 30px; height: 24px; border-radius: 3px; border: 1px solid var(--border); cursor: pointer; padding: 0; background: none; }
+    .color-hex { font-size: 11px; color: var(--text-dim); background: var(--card); border: 1px solid var(--border); border-radius: 3px; padding: 3px 7px; width: 80px; font-family: monospace; }
+
+    /* Modal footer */
+    .modal-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+      background: var(--surface);
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px; right: 24px;
+      background: var(--card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      font-size: 13px; font-weight: 600;
+      z-index: 999;
+      display: flex; align-items: center; gap: 8px;
+      transform: translateY(80px);
+      transition: transform 0.25s cubic-bezier(0.16,1,0.3,1);
+      pointer-events: none;
+    }
+    .toast.show { transform: translateY(0); }
+    .toast.success { border-color: rgba(34,197,94,0.4); }
+    .toast.error { border-color: rgba(255,68,68,0.4); }
+    .toast-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .toast.success .toast-dot { background: var(--success); }
+    .toast.error .toast-dot { background: var(--danger); }
+
+    /* Danger confirm */
+    .confirm-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 300;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.15s;
+    }
+    .confirm-overlay.open { opacity: 1; pointer-events: all; }
+    .confirm-box {
+      background: var(--surface);
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      padding: 28px 32px;
+      max-width: 380px;
+      text-align: center;
+      transform: scale(0.95);
+      transition: transform 0.15s;
+    }
+    .confirm-overlay.open .confirm-box { transform: scale(1); }
+    .confirm-icon { font-size: 32px; margin-bottom: 12px; }
+    .confirm-title { font-size: 15px; font-weight: 800; margin-bottom: 8px; }
+    .confirm-text { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.5; }
+    .confirm-actions { display: flex; gap: 10px; justify-content: center; }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 24px;
+      color: var(--text-muted);
+    }
+    .empty-state svg { width: 40px; height: 40px; margin: 0 auto 12px; opacity: 0.3; }
+    .empty-state p { font-size: 13px; }
+
+    input[type="file"] { display: none; }
+    ::selection { background: var(--accent); color: #000; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <span>Portfolio</span>
+    <strong>Admin Panel</strong>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-item active">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+      Projects
+    </div>
+    <div class="nav-item" onclick="openModal()">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Add New Work
+    </div>
+    <div class="nav-item" onclick="confirmReset()">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+      Reset to Defaults
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <a href="index.html" target="_blank" class="portfolio-link">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:14px;height:14px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+      View Portfolio
+    </a>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Works</div>
+      <div class="topbar-sub">Manage your portfolio projects</div>
+    </div>
+    <button class="btn btn-primary" onclick="openModal()">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+      Add New Work
+    </button>
+  </div>
+
+  <div class="content">
+    <!-- Stats -->
+    <div class="stats">
+      <div class="stat-card"><div class="stat-label">Total Works</div><div class="stat-value accent" id="stat-total">0</div></div>
+      <div class="stat-card"><div class="stat-label">Categories</div><div class="stat-value" id="stat-cats">0</div></div>
+      <div class="stat-card"><div class="stat-label">Layout Templates</div><div class="stat-value">5</div></div>
+    </div>
+
+    <!-- Projects -->
+    <div class="section-header">
+      <div class="section-title">All Works</div>
+    </div>
+    <div class="project-table">
+      <div class="project-row header-row">
+        <div>#</div><div>Preview</div><div>Project</div><div>Category</div><div>Layout</div><div style="text-align:right">Actions</div>
+      </div>
+      <div id="projects-list"></div>
+    </div>
+  </div>
+</main>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Add New Work</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="steps">
+      <div class="step-tab active" onclick="goStep(1)" data-step="1"><span class="step-num">1</span> Info</div>
+      <div class="step-tab" onclick="goStep(2)" data-step="2"><span class="step-num">2</span> Layout</div>
+      <div class="step-tab" onclick="goStep(3)" data-step="3"><span class="step-num">3</span> Images</div>
+    </div>
+    <div class="modal-body">
+
+      <!-- Step 1: Info -->
+      <div class="step-panel active" id="step-1">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Project Title *</label>
+            <input type="text" id="f-title" class="form-input" placeholder="e.g. Werde jetzt laut." />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Category *</label>
+            <input type="text" id="f-category" class="form-input" placeholder="e.g. Branding, UI/UX, Packaging" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description *</label>
+          <textarea id="f-desc" class="form-textarea" placeholder="Short description of the project…"></textarea>
+        </div>
+      </div>
+
+      <!-- Step 2: Layout -->
+      <div class="step-panel" id="step-2">
+        <div class="form-group">
+          <label class="form-label">Choose Bento Grid Layout</label>
+          <div class="template-grid" id="template-grid"></div>
+        </div>
+      </div>
+
+      <!-- Step 3: Images -->
+      <div class="step-panel" id="step-3">
+        <div class="image-slots" id="image-slots"></div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="btn-prev" onclick="changeStep(-1)" style="display:none">← Back</button>
+      <div style="margin-left:auto;display:flex;gap:10px">
+        <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" id="btn-next" onclick="changeStep(1)">Next →</button>
+        <button class="btn btn-primary" id="btn-save" onclick="saveProject()" style="display:none">Save Work ✓</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DELETE -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-icon">🗑️</div>
+    <div class="confirm-title">Delete this work?</div>
+    <div class="confirm-text">This will permanently remove the project from your portfolio and cannot be undone.</div>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost" onclick="closeConfirm()">Cancel</button>
+      <button class="btn btn-danger" id="confirm-delete-btn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM RESET -->
+<div class="confirm-overlay" id="reset-overlay">
+  <div class="confirm-box">
+    <div class="confirm-icon">⚠️</div>
+    <div class="confirm-title">Reset to defaults?</div>
+    <div class="confirm-text">This will restore the original 5 projects and remove all your changes.</div>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost" onclick="document.getElementById('reset-overlay').classList.remove('open')">Cancel</button>
+      <button class="btn btn-danger" onclick="doReset()">Reset</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><div class="toast-dot"></div><span id="toast-msg"></span></div>
+
+<script>
+// ─── State ───────────────────────────────────────────────────────────────
+let currentStep = 1;
+let editingId = null;
+let selectedTemplate = 1;
+let imageData = {}; // slot index → { url, alt, bg, file }
+
+// ─── Template visual diagrams ─────────────────────────────────────────────
+const TEMPLATE_VISUALS = {
+  1: { name:'Poster + Details', desc:'Big poster + 3 cells',
+       grid:'grid-template-columns:1fr 1fr 1fr 1fr;grid-template-rows:1fr 1fr',
+       cells:[
+         {cs:2,rs:2,accent:true},{cs:1,rs:1},{cs:1,rs:1},{cs:2,rs:1}
+       ]},
+  2: { name:'Hero + Side Stack', desc:'Big hero + 2 side cells',
+       grid:'grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr',
+       cells:[{cs:2,rs:2,accent:true},{cs:1,rs:1},{cs:1,rs:1}]},
+  3: { name:'Wide Main + 2', desc:'3-wide main + 2 stacked',
+       grid:'grid-template-columns:1fr 1fr 1fr 1fr;grid-template-rows:1fr 1fr',
+       cells:[{cs:3,rs:2,accent:true},{cs:1,rs:1},{cs:1,rs:1}]},
+  4: { name:'Twin Tall + Feature', desc:'2 tall + 1 wide feature',
+       grid:'grid-template-columns:1fr 1fr 1fr 1fr;grid-template-rows:1fr 1fr',
+       cells:[{cs:1,rs:2},{cs:1,rs:2},{cs:2,rs:2,accent:true}]},
+  5: { name:'Typography + Brand', desc:'Type panel + badge + strip',
+       grid:'grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 0.8fr',
+       cells:[{cs:2,rs:1,accent:true},{cs:1,rs:1},{cs:3,rs:1}]}
+};
+
+// ─── Init ─────────────────────────────────────────────────────────────────
+function init() {
+  renderProjectList();
+  renderTemplateGrid();
+}
+
+// ─── Render project list ──────────────────────────────────────────────────
+function renderProjectList() {
+  const projects = getProjects();
+  const list = document.getElementById('projects-list');
+  document.getElementById('stat-total').textContent = projects.length;
+  const cats = new Set(projects.map(p => p.category));
+  document.getElementById('stat-cats').textContent = cats.size;
+
+  if (!projects.length) {
+    list.innerHTML = `<div class="empty-state">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+      <p>No projects yet. Click "Add New Work" to get started.</p></div>`;
+    return;
+  }
+
+  list.innerHTML = projects.map(p => {
+    const thumb = p.images && p.images[0] && p.images[0].url
+      ? `<img src="${p.images[0].url}" alt="" onerror="this.style.display='none'">`
+      : '';
+    const tname = LAYOUT_TEMPLATES[p.layoutTemplate]?.name || 'Custom';
+    return `
+    <div class="project-row" data-id="${p.id}">
+      <div class="proj-number">${p.number}</div>
+      <div class="proj-thumb">${thumb}</div>
+      <div>
+        <div class="proj-title">${p.title}</div>
+        <div class="proj-desc">${p.description}</div>
+      </div>
+      <div><span class="proj-cat">${p.category}</span></div>
+      <div><span class="layout-badge">Layout ${p.layoutTemplate}</span></div>
+      <div class="row-actions">
+        <button class="icon-btn icon-btn-edit" onclick="openEdit('${p.id}')" title="Edit">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+        </button>
+        <button class="icon-btn icon-btn-del" onclick="confirmDelete('${p.id}')" title="Delete">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── Template grid ────────────────────────────────────────────────────────
+function renderTemplateGrid() {
+  const grid = document.getElementById('template-grid');
+  grid.innerHTML = Object.entries(TEMPLATE_VISUALS).map(([id, t]) => {
+    const cells = t.cells.map(c =>
+      `<div class="t-cell ${c.accent?'accent':''}" style="grid-column:span ${c.cs};grid-row:span ${c.rs}"></div>`
+    ).join('');
+    return `
+    <div class="template-card ${selectedTemplate==id?'selected':''}" onclick="selectTemplate(${id})">
+      <div class="template-preview" style="display:grid;${t.grid};gap:2px">${cells}</div>
+      <div class="template-name">${t.name}</div>
+      <div class="template-desc">${t.desc}</div>
+    </div>`;
+  }).join('');
+}
+
+function selectTemplate(id) {
+  selectedTemplate = parseInt(id);
+  renderTemplateGrid();
+  buildImageSlots();
+}
+
+// ─── Image slots ──────────────────────────────────────────────────────────
+function buildImageSlots() {
+  const tmpl = LAYOUT_TEMPLATES[selectedTemplate];
+  if (!tmpl) return;
+  const container = document.getElementById('image-slots');
+  container.innerHTML = Array.from({length: tmpl.slots}, (_, i) => {
+    const label = tmpl.slotLabels[i] || `Image ${i+1}`;
+    const cur = imageData[i] || {};
+    const bg = cur.bg || '#f3f4f6';
+    return `
+    <div class="image-slot">
+      <div class="slot-header">
+        <div class="slot-preview" id="preview-${i}"><img id="preview-img-${i}" src="${cur.url||''}" ${cur.url?'':'style="display:none"' } alt=""></div>
+        <span class="slot-label">Slot ${i+1} — ${label}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center">
+        <input type="text" class="form-input" id="img-url-${i}" placeholder="Image URL or leave empty" value="${cur.url||''}"
+          oninput="onUrlInput(${i},this.value)" style="font-size:12px" />
+        <button class="upload-btn" style="width:auto;white-space:nowrap" onclick="document.getElementById('file-input-${i}').click()">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+          Upload
+        </button>
+        <input type="file" id="file-input-${i}" accept="image/*" onchange="onFileUpload(${i},this)">
+      </div>
+      <div class="slot-bg">
+        <span class="slot-bg-label">Cell BG:</span>
+        <input type="color" class="color-input" id="bg-color-${i}" value="${bg}" oninput="onBgChange(${i},this.value)">
+        <input type="text" class="color-hex" id="bg-hex-${i}" value="${bg}" oninput="onBgHex(${i},this.value)">
+        <input type="text" class="form-input" id="img-alt-${i}" placeholder="Alt text" value="${cur.alt||''}" style="font-size:11px;flex:1">
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function onUrlInput(i, val) {
+  if (!imageData[i]) imageData[i] = {};
+  imageData[i].url = val;
+  const img = document.getElementById(`preview-img-${i}`);
+  img.src = val;
+  img.style.display = val ? 'block' : 'none';
+}
+
+function onFileUpload(i, input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    if (!imageData[i]) imageData[i] = {};
+    imageData[i].url = e.target.result;
+    document.getElementById(`img-url-${i}`).value = '';
+    const img = document.getElementById(`preview-img-${i}`);
+    img.src = e.target.result;
+    img.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function onBgChange(i, val) {
+  if (!imageData[i]) imageData[i] = {};
+  imageData[i].bg = val;
+  document.getElementById(`bg-hex-${i}`).value = val;
+}
+
+function onBgHex(i, val) {
+  if (!imageData[i]) imageData[i] = {};
+  imageData[i].bg = val;
+  document.getElementById(`bg-color-${i}`).value = val;
+}
+
+// ─── Modal open/close ─────────────────────────────────────────────────────
+function openModal() {
+  editingId = null;
+  currentStep = 1;
+  selectedTemplate = 1;
+  imageData = {};
+  document.getElementById('modal-title').textContent = 'Add New Work';
+  document.getElementById('f-title').value = '';
+  document.getElementById('f-category').value = '';
+  document.getElementById('f-desc').value = '';
+  renderTemplateGrid();
+  buildImageSlots();
+  goStep(1);
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function openEdit(id) {
+  const p = getProjects().find(x => x.id === id);
+  if (!p) return;
+  editingId = id;
+  currentStep = 1;
+  selectedTemplate = p.layoutTemplate || 1;
+  imageData = {};
+  (p.images || []).forEach((img, i) => { imageData[i] = { ...img }; });
+  document.getElementById('modal-title').textContent = 'Edit Work — ' + p.title;
+  document.getElementById('f-title').value = p.title;
+  document.getElementById('f-category').value = p.category;
+  document.getElementById('f-desc').value = p.description;
+  renderTemplateGrid();
+  buildImageSlots();
+  goStep(1);
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+// ─── Steps ────────────────────────────────────────────────────────────────
+function goStep(n) {
+  currentStep = n;
+  document.querySelectorAll('.step-panel').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.step-tab').forEach(el => {
+    el.classList.toggle('active', parseInt(el.dataset.step) === n);
+  });
+  document.getElementById(`step-${n}`).classList.add('active');
+
+  document.getElementById('btn-prev').style.display = n > 1 ? 'inline-flex' : 'none';
+  document.getElementById('btn-next').style.display = n < 3 ? 'inline-flex' : 'none';
+  document.getElementById('btn-save').style.display = n === 3 ? 'inline-flex' : 'none';
+
+  if (n === 3) buildImageSlots();
+}
+
+function changeStep(dir) {
+  if (dir === 1 && !validateStep(currentStep)) return;
+  const next = Math.max(1, Math.min(3, currentStep + dir));
+  goStep(next);
+}
+
+function validateStep(step) {
+  if (step === 1) {
+    if (!document.getElementById('f-title').value.trim()) { showToast('Project title is required', 'error'); return false; }
+    if (!document.getElementById('f-category').value.trim()) { showToast('Category is required', 'error'); return false; }
+    if (!document.getElementById('f-desc').value.trim()) { showToast('Description is required', 'error'); return false; }
+  }
+  return true;
+}
+
+// ─── Save ─────────────────────────────────────────────────────────────────
+function saveProject() {
+  if (!validateStep(1)) { goStep(1); return; }
+
+  const tmpl = LAYOUT_TEMPLATES[selectedTemplate];
+  const images = Array.from({length: tmpl?.slots || 3}, (_, i) => {
+    const d = imageData[i] || {};
+    return {
+      url: d.url || document.getElementById(`img-url-${i}`)?.value || '',
+      alt: document.getElementById(`img-alt-${i}`)?.value || '',
+      bg: d.bg || document.getElementById(`bg-hex-${i}`)?.value || '#f3f4f6',
+      fallback: ''
+    };
+  });
+
+  const data = {
+    title: document.getElementById('f-title').value.trim(),
+    category: document.getElementById('f-category').value.trim(),
+    description: document.getElementById('f-desc').value.trim(),
+    layoutTemplate: selectedTemplate,
+    images
+  };
+
+  if (editingId) {
+    updateProject(editingId, data);
+    showToast('Work updated successfully', 'success');
+  } else {
+    addProject(data);
+    showToast('Work added to portfolio', 'success');
+  }
+  closeModal();
+  renderProjectList();
+}
+
+// ─── Delete ───────────────────────────────────────────────────────────────
+let deleteTarget = null;
+function confirmDelete(id) {
+  deleteTarget = id;
+  document.getElementById('confirm-overlay').classList.add('open');
+  document.getElementById('confirm-delete-btn').onclick = () => {
+    deleteProject(deleteTarget);
+    closeConfirm();
+    renderProjectList();
+    showToast('Work deleted', 'success');
+  };
+}
+function closeConfirm() {
+  document.getElementById('confirm-overlay').classList.remove('open');
+  deleteTarget = null;
+}
+
+// ─── Reset ────────────────────────────────────────────────────────────────
+function confirmReset() {
+  document.getElementById('reset-overlay').classList.add('open');
+}
+function doReset() {
+  resetToDefaults();
+  document.getElementById('reset-overlay').classList.remove('open');
+  renderProjectList();
+  showToast('Reset to default projects', 'success');
+}
+
+// ─── Toast ────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.className = `toast ${type}`;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// Close modal on overlay click
+document.getElementById('modal-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+});
+document.getElementById('confirm-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('confirm-overlay')) closeConfirm();
+});
+
+init();
+</script>
+</body>
+</html>
