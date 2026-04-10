@@ -96,9 +96,16 @@ async function getProjects() {
   try {
     const snapshot = await db.collection(COLLECTION).orderBy('number').get();
     if (snapshot.empty) {
-      // First run — seed defaults
-      await seedDefaults();
-      return DEFAULT_PROJECTS;
+      // Check if DB was ever initialized before
+      const meta = await db.collection('_meta').doc('settings').get();
+      if (!meta.exists) {
+        // 🆕 Very first run ever — seed defaults and mark as initialized
+        await seedDefaults();
+        await db.collection('_meta').doc('settings').set({ initialized: true });
+        return DEFAULT_PROJECTS;
+      }
+      // DB is initialized — user just has no projects (they deleted them all)
+      return [];
     }
     return snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
   } catch (e) {
@@ -146,13 +153,16 @@ async function deleteProject(id) {
 
 // ── RESET to defaults ──────────────────────────────────────────────────────
 async function resetToDefaults() {
-  // Delete all existing
+  // Delete all existing projects
   const snapshot = await db.collection(COLLECTION).get();
   const batch = db.batch();
   snapshot.docs.forEach(doc => batch.delete(doc.ref));
+  // Also delete the _meta flag so it re-seeds on next getProjects() call
+  batch.delete(db.collection('_meta').doc('settings'));
   await batch.commit();
-  // Re-seed
+  // Re-seed now
   await seedDefaults();
+  await db.collection('_meta').doc('settings').set({ initialized: true });
 }
 
 // ── Layout template definitions (unchanged) ───────────────────────────────
